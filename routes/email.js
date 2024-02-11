@@ -2,9 +2,33 @@ var express = require('express');
 require('dotenv').config({ path: '../.env' })
 const nodemailer = require('nodemailer');
 var router = express.Router();
+const multer = require('multer');
+const UserModel = require('../model/User');
 
 
-router.post('/email', (req, res) => {
+// Configure multer for file upload
+const upload = multer({ dest: 'uploads/' });
+
+router.post('/details', upload.single('file'), (req, res) => {
+
+    const user = new UserModel({
+        fullName: req.body.fullName,
+        email: req.body.email,
+        brandName: req.body.brandName,
+        website: req.body.website,
+        achieve: {
+            desc: "What do you want to achieve?",
+            value: req.body.achieve
+        },
+        services: {
+            desc: "What services do you need?",
+            value: req.body.services
+        },
+        budget: {
+            desc: "Budget range",
+            value: req.body.budget
+        }
+    })
     // Configure Nodemailer with your email service credentials
     const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -13,17 +37,31 @@ router.post('/email', (req, res) => {
             pass: process.env.USER_PASS,
         },
     });
+
     // Email configuration
     const mailOptions = {
-        from: 'ajaykumarsh022@gmail.com',
-        to: 'ajaykumarsh022@gmail.com',
-        subject: 'Form Submission',
-        // text: `Name: ${user.firstName}\nEmail: ${user.email}\nMessage: ${user.message}`,
-        text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
+        from: From_EMAIL_ID,
+        to: `${user.email}`,
+        subject: SUBJECT_OF_EMAIL,
+        text: `Name: ${user.fullName}
+               Email: ${user.email}
+               Brand Name: ${user.brandName}
+               Website: ${user.website}
+               ${user.achieve.desc} : ${user.achieve.value.map(item => `${item}`).join(',')}
+               ${user.services.desc}: ${user.services.value.map(item => `${item}`).join(',')}
+               ${user.budget.desc}: ${user.budget.value.map(item => `${item}`).join(',')} `,
+
+        attachments: [
+            {
+                filename: req.file.originalname,
+                path: req.file.path
+            }
+        ]
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
+            console.log(info);
             return res.status(500).send(error.toString());
         }
         res.status(200).send('Form submitted successfully!');

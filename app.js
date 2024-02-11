@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const nodemailer = require('nodemailer');
+const cors = require('cors')
+const multer = require('multer')
 
 require("dotenv").config();
 
@@ -11,7 +13,7 @@ require("dotenv").config();
 var emailRouter = require('./routes/email');
 
 var app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 
 app.use(logger('dev'));
@@ -22,8 +24,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', emailRouter);
-
-console.log(process.env.USER_GMAIL);
+app.use(cors());
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -42,7 +43,7 @@ app.use(function (err, req, res, next) {
 });
 
 app.get('/', (req, res) => {
-  console.log(process.env.USER_GMAIL);
+
   res.send("Hello there");
 })
 
